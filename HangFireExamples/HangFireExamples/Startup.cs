@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
-using Hangfire;
+﻿using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -23,6 +20,8 @@ namespace HangFireExamples
         public void ConfigureServices(IServiceCollection services)
         {
             var connectionString = Configuration.GetValue<string>("HangFireConnectionString");
+
+           
 
             services.AddHangfire(conf => conf.UseSqlServerStorage(connectionString));
             services.AddSwaggerGen(options =>
@@ -50,7 +49,12 @@ namespace HangFireExamples
             app.UseSwaggerUI(options =>
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "Documentation"));
 
-            app.UseHangfireServer();
+            var queuesOptions = new BackgroundJobServerOptions
+            {
+                Queues = new[] { "critical", "default" }
+            };
+
+            app.UseHangfireServer(queuesOptions);
             app.UseHangfireDashboard();
 
             app.UseMvc();
