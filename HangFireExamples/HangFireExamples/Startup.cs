@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
+using System.Reflection;
+using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace HangFireExamples
 {
@@ -23,6 +22,18 @@ namespace HangFireExamples
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var connectionString = Configuration.GetValue<string>("HangFireConnectionString");
+
+            services.AddHangfire(conf => conf.UseSqlServerStorage(connectionString));
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new Info
+                {
+                    Title = "Test API",
+                    Version = "v1"
+                });
+            });
+
             services.AddMvc();
         }
 
@@ -33,6 +44,14 @@ namespace HangFireExamples
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseSwagger();
+
+            app.UseSwaggerUI(options =>
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Documentation"));
+
+            app.UseHangfireServer();
+            app.UseHangfireDashboard();
 
             app.UseMvc();
         }
